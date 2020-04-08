@@ -61,7 +61,7 @@ def track(opt):
     logger.info('Starting tracking...')
     dataloader = datasets.LoadVideo(opt.input_video, opt.img_size)
     result_filename = os.path.join(result_root, 'results.txt')
-    frame_rate = dataloader.frame_rate 
+    frame_rate = dataloader.frame_rate
 
     frame_dir = None if opt.output_format=='text' else osp.join(result_root, 'frame')
     try:

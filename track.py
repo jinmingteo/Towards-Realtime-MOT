@@ -18,7 +18,7 @@ from utils.utils import *
 
 def write_results(filename, results, data_type):
     if data_type == 'mot':
-        save_format = '{frame},{id},{x1},{y1},{w},{h},1,-1,-1,-1\n'
+        save_format = '{frame},{id},{x1},{y1},{w},{h},1,person,-1, -1\n'
     elif data_type == 'kitti':
         save_format = '{frame} {id} pedestrian 0 0 -10 {x1} {y1} {x2} {y2} -10 -10 -10 -1000 -1000 -1000 -10\n'
     else:
@@ -38,7 +38,7 @@ def write_results(filename, results, data_type):
     logger.info('save results to {}'.format(filename))
 
 
-def eval_seq(opt, dataloader, data_type, result_filename, save_dir=None, show_image=True, frame_rate=30):
+def eval_seq(opt, dataloader, data_type, result_filename, save_dir=None, show_image=True, frame_rate=30, vw=0):
     if save_dir:
         mkdir_if_missing(save_dir)
     tracker = JDETracker(opt, frame_rate=frame_rate)
@@ -55,13 +55,19 @@ def eval_seq(opt, dataloader, data_type, result_filename, save_dir=None, show_im
         online_targets = tracker.update(blob, img0)
         online_tlwhs = []
         online_ids = []
+        # print (img0.shape, "Image shape")
+        # print (img.shape)
+        # print (frame_id, "Current Frame")
         for t in online_targets:
             tlwh = t.tlwh
             tid = t.track_id
             vertical = tlwh[2] / tlwh[3] > 1.6
             if tlwh[2] * tlwh[3] > opt.min_box_area and not vertical:
+                tlwh = [item * vw/img.shape[2] for item in tlwh]
                 online_tlwhs.append(tlwh)
                 online_ids.append(tid)
+        # print (online_tlwhs, "tlwhs")
+        # print (online_ids, "online_ids")
         timer.toc()
         # save results
         results.append((frame_id + 1, online_tlwhs, online_ids))
@@ -78,7 +84,7 @@ def eval_seq(opt, dataloader, data_type, result_filename, save_dir=None, show_im
     return frame_id, timer.average_time, timer.calls
 
 
-def main(opt, data_root='/data/MOT16/train', det_root=None, seqs=('MOT16-05',), exp_name='demo', 
+def main(opt, data_root='/media/dh/data/MOT16/train', det_root=None, seqs=('MOT16-05',), exp_name='demo', 
          save_images=False, save_videos=False, show_image=True):
     logger.setLevel(logging.INFO)
     result_root = os.path.join(data_root, '..', 'results', exp_name)
@@ -97,12 +103,16 @@ def main(opt, data_root='/data/MOT16/train', det_root=None, seqs=('MOT16-05',), 
         output_dir = os.path.join(data_root, '..','outputs', exp_name, seq) if save_images or save_videos else None
 
         logger.info('start seq: {}'.format(seq))
-        dataloader = datasets.LoadImages(osp.join(data_root, seq, 'img1'), opt.img_size)
-        result_filename = os.path.join(result_root, '{}.txt'.format(seq))
-        meta_info = open(os.path.join(data_root, seq, 'seqinfo.ini')).read() 
-        frame_rate = int(meta_info[meta_info.find('frameRate')+10:meta_info.find('\nseqLength')])
+        #dataloader = datasets.LoadImages(osp.join(data_root, seq, 'img1'), opt.img_size)
+        print (osp.join(data_root, seq))
+        dataloader = datasets.LoadVideo(osp.join(data_root, seq))
+        # print ("DATALOADER", dataloader.vw)
+        result_filename = os.path.join(result_root, '{}.csv'.format(seq))
+        #meta_info = open(os.path.join(data_root, seq, 'seqinfo.ini')).read() 
+        #frame_rate = int(meta_info[meta_info.find('frameRate')+10:meta_info.find('\nseqLength')])
+        frame_rate = 30
         nf, ta, tc = eval_seq(opt, dataloader, data_type, result_filename,
-                              save_dir=output_dir, show_image=show_image, frame_rate=frame_rate)
+                              save_dir=output_dir, show_image=show_image, frame_rate=frame_rate, vw=dataloader.vw)
         n_frame += nf
         timer_avgs.append(ta)
         timer_calls.append(tc)
@@ -122,16 +132,16 @@ def main(opt, data_root='/data/MOT16/train', det_root=None, seqs=('MOT16-05',), 
     logger.info('Time elapsed: {:.2f} seconds, FPS: {:.2f}'.format(all_time, 1.0 / avg_time))
 
     # get summary
-    metrics = mm.metrics.motchallenge_metrics
-    mh = mm.metrics.create()
-    summary = Evaluator.get_summary(accs, seqs, metrics)
-    strsummary = mm.io.render_summary(
-        summary,
-        formatters=mh.formatters,
-        namemap=mm.io.motchallenge_metric_names
-    )
-    print(strsummary)
-    Evaluator.save_summary(summary, os.path.join(result_root, 'summary_{}.xlsx'.format(exp_name)))
+    # metrics = mm.metrics.motchallenge_metrics
+    # mh = mm.metrics.create()
+    # summary = Evaluator.get_summary(accs, seqs, metrics)
+    # strsummary = mm.io.render_summary(
+    #     summary,
+    #     formatters=mh.formatters,
+    #     namemap=mm.io.motchallenge_metric_names
+    # )
+    # print(strsummary)
+    # Evaluator.save_summary(summary, os.path.join(result_root, 'summary_{}.xlsx'.format(exp_name)))
 
 
 
@@ -144,11 +154,11 @@ if __name__ == '__main__':
     parser.add_argument('--nms-thres', type=float, default=0.4, help='iou threshold for non-maximum suppression')
     parser.add_argument('--min-box-area', type=float, default=200, help='filter out tiny boxes')
     parser.add_argument('--track-buffer', type=int, default=30, help='tracking buffer')
-    parser.add_argument('--test-mot16', action='store_true', help='tracking buffer')
+    parser.add_argument('--test-mot16', action='store_false', help='tracking buffer')
     parser.add_argument('--save-images', action='store_true', help='save tracking results (image)')
     parser.add_argument('--save-videos', action='store_true', help='save tracking results (video)')
     opt = parser.parse_args()
-    print(opt, end='\n\n')
+    print(opt)
  
     if not opt.test_mot16:
         seqs_str = '''MOT17-02-SDP
@@ -161,14 +171,9 @@ if __name__ == '__main__':
                     '''
         data_root = '/home/wangzd/datasets/MOT/MOT17/images/train'
     else:
-        seqs_str = '''MOT16-01
-                     MOT16-03
-                     MOT16-06
-                     MOT16-07
-                     MOT16-08
-                     MOT16-12
-                     MOT16-14'''
-        data_root = '/home/wangzd/datasets/MOT/MOT16/images/test'
+        seqs_str = '''people_walking.mp4
+                   '''
+        data_root = './video/ppl'
     seqs = [seq.strip() for seq in seqs_str.split()]
 
     main(opt,

@@ -13,6 +13,7 @@ from torchvision.ops import nms
 
 
 def mkdir_if_missing(dir):
+    print (dir)
     os.makedirs(dir, exist_ok=True)
 
 
@@ -111,7 +112,9 @@ def scale_coords(img_size, coords, img0_shape):
     coords[:, [0, 2]] -= pad_x
     coords[:, [1, 3]] -= pad_y
     coords[:, 0:4] /= gain
+    #print (gain)
     coords[:, :4] = torch.clamp(coords[:, :4], min=0)
+
     return coords
 
 
