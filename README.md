@@ -52,7 +52,7 @@ Trained models with different input resolutions:
 |-----|------|------|-----|----|----|-----|------|
 |JDE-1088x608| 74.8|	67.3|	1189| 5558|	21505|	22.2| [[Google]](https://drive.google.com/open?id=1nlnuYfGNuHWZztQHXwVZSL_FvfE551pA) [[Baidu]](https://pan.baidu.com/s/1Ifgn0Y_JZE65_qSrQM2l-Q) |
 |JDE-864x480| 70.8|	65.8|	1279|	5653|	25806|	30.3| [[Google]](https://drive.google.com/open?id=1UKgkYrsV-59kYaHgWeJ70p5Mij3QWuFr) [[Baidu]](https://pan.baidu.com/s/1rBQ7DFjhLQbEq6JTJRntKA) |
-|JDE-576x320| 63.7|	63.3|	1307|	6657|	32794|	37.9|[[Google]]() [[Baidu]](https://pan.baidu.com/s/1cCulbPNneIXOpRRjrTgJ4g) |
+|JDE-576x320| 63.7|	63.3|	1307|	6657|	32794|	37.9|[[Google]](https://drive.google.com/file/d/1sca65sHMnxY7YJ89FJ6Dg3S3yAjbLdMz/view?usp=sharing) [[Baidu]](https://pan.baidu.com/s/1cCulbPNneIXOpRRjrTgJ4g) |
 
 The performance is tested on the MOT-16 training set, just for reference. Running speed is tested on an Nvidia Titan Xp GPU. For a more comprehensive comparison with other methods you can test on MOT-16 test set and submit a result to the [MOT-16 benchmark](https://motchallenge.net/results/MOT16/?det=Private). Note that the results should be submitted to the private detector track.
 
@@ -76,6 +76,20 @@ We use 8x Nvidia Titan Xp to train the model, with a batch size of 32. You can a
 ### Train with custom datasets
 Adding custom datsets is quite simple, all you need to do is to organize your annotation files in the same format as in our training sets. Please refer to [DATASET_ZOO.md](https://github.com/Zhongdao/Towards-Realtime-MOT/blob/master/DATASET_ZOO.md) for the dataset format. 
 
+## Related Resources
+See also the current SOTA on MOT16 private track, [FairMOT](https://github.com/ifzhang/FairMOT), which follows the framework of JDE. They employ an anchor-free, high-resolution network and thus mitigate the embedding mis-alignment/overlapping issue, and achieves higher performance. The results are surprisingly good -- 68.7 MOTA	/ 70.4 IDF-1 / 953 IDs !	
 
 ## Acknowledgement
 A large portion of code is borrowed from [ultralytics/yolov3](https://github.com/ultralytics/yolov3) and [longcw/MOTDT](https://github.com/longcw/MOTDT), many thanks to their wonderful work!
+
+## Citation
+If you find this repo useful in your project or research, please consider citing it:
+```
+@article{wang2019towards,
+  title={Towards Real-Time Multi-Object Tracking},
+  author={Wang, Zhongdao and Zheng, Liang and Liu, Yixuan and Wang, Shengjin},
+  journal={arXiv preprint arXiv:1909.12605},
+  year={2019}
+}
+```
+

@@ -78,6 +78,9 @@ class LoadImages:  # for inference
 
 class LoadVideo:  # for inference
     def __init__(self, path, img_size=(1088, 608)):
+        if not os.path.isfile(path):
+            raise FileExistsError
+        
         self.cap = cv2.VideoCapture(path)        
         self.frame_rate = int(round(self.cap.get(cv2.CAP_PROP_FPS)))
         self.vw = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -393,6 +396,9 @@ class JointDataset(LoadImagesAndLabels):  # for training
         
 
     def __getitem__(self, files_index):
+        """
+        Iterator function for train dataset
+        """
         for i, c in enumerate(self.cds):
             if files_index >= c: 
                 ds = list(self.label_files.keys())[i]
